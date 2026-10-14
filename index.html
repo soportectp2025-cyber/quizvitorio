@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz Interactivo - Digitación Computacional</title>
+    <style>
+        :root {
+            --kahoot-purple: #46178f;
+            --kahoot-purple-dark: #331068;
+            --card-bg: #ffffff;
+            --text-main: #333333;
+            --red: #e21b3c;
+            --blue: #1368ce;
+            --yellow: #d89e00;
+            --green: #26890c;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--kahoot-purple);
+            color: var(--text-main);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+            width: 90%;
+            max-width: 800px;
+            padding: 30px;
+            box-sizing: border-box;
+            text-align: center;
+        }
+
+        /* Pantalla de Bienvenida */
+        .institutional-header {
+            background-color: #f4f4f4;
+            border-left: 6px solid var(--kahoot-purple);
+            padding: 15px;
+            margin-bottom: 25px;
+            text-align: left;
+            border-radius: 4px;
+        }
+
+        .institutional-header h2 {
+            margin: 0 0 8px 0;
+            font-size: 1.1rem;
+            color: var(--kahoot-purple);
+        }
+
+        .institutional-header p {
+            margin: 4px 0;
+            font-size: 0.95rem;
+            color: #555;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: var(--text-main);
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            box-sizing: border-box;
+            border: 2px solid #ccc;
+            border-radius: 6px;
+            font-size: 1rem;
+        }
+
+        .btn {
+            background-color: var(--green);
+            color: white;
+            border: none;
+            padding: 14px 28px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            border-radius: 6px;
+            cursor: pointer;
+            width: 100%;
+            transition: opacity 0.2s;
+        }
+
+        .btn:hover {
+            opacity: 0.9;
+        }
+
+        /* Estilos del Quiz */
+        .quiz-screen, .result-screen {
+            display: none;
+        }
+
+        .quiz-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            font-weight: bold;
+            font-size: 1.1rem;
+            color: #666;
+        }
+
+        .timer-bar-container {
+            width: 100%;
+            background-color: #ddd;
+            height: 10px;
+            border-radius: 5px;
+            margin-bottom: 25px;
+            overflow: hidden;
+        }
+
+        .timer-bar {
+            height: 100%;
+            background-color: var(--green);
+            width: 100%;
+            transition: width 1s linear, background-color 1s;
+        }
+
+        .question-text {
+            font-size: 1.25rem;
+            font-weight: bold;
+            margin-bottom: 25px;
+            color: var(--text-main);
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .option-btn {
+            padding: 20px;
+            font-size: 1.05rem;
+            font-weight: bold;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            text-align: left;
+            transition: transform 0.1s, opacity 0.2s;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .option-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+        }
+
+        .option-btn:disabled {
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+
+        .opt-1 { background-color: var(--red); }   /* ▲ Rojo */
+        .opt-2 { background-color: var(--blue); }  /* ◆ Azul */
+        .opt-3 { background-color: var(--yellow); }/* ● Amarillo */
+        .opt-4 { background-color: var(--green); } /* ■ Verde */
+
+        .option-icon {
+            font-size: 1.4rem;
+            margin-right: 15px;
+            min-width: 30px;
+            text-align: center;
+        }
+
+        .feedback-box {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 6px;
+            font-weight: 500;
+            display: none;
+        }
+
+        .feedback-correct {
+            background-color: #e8f5e9;
+            color: var(--green);
+            border: 1px solid var(--green);
+        }
+
+        .feedback-incorrect {
+            background-color: #ffebee;
+            color: var(--red);
+            border: 1px solid var(--red);
+        }
+
+        .next-btn {
+            margin-top: 20px;
+            background-color: var(--kahoot-purple);
+            display: none;
+        }
+
+        /* Pantalla de Resultados */
+        .result-screen h2 {
+            color: var(--kahoot-purple);
+            font-size: 2rem;
+            margin-bottom: 15px;
+        }
+
+        .score-card {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            font-size: 1.2rem;
+        }
+
+        .sync-status {
+            font-style: italic;
+            color: #666;
+            margin-top: 15px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <!-- Pantalla de Bienvenida -->
+    <div id="welcome-screen" class="welcome-screen">
+        <div class="institutional-header">
+            <h2>Centro Educativo Católico Monseñor Vittorino Girardi Stellin</h2>
+            <p><strong>Asignatura:</strong> Informática</p>
+            <p><strong>Docente:</strong> Ing. Jhonathan Juarez Rivas</p>
+            <p><em>Basado estrictamente en el material de estudio del curso.</em></p>
+        </div>
+        
+        <h1>Quiz Interactivo: Digitación Computacional</h1>
+        <p style="margin-bottom: 25px; color: #666;">Ingrese sus datos personales para iniciar la prueba evaluativa.</p>
+
+        <div class="form-group">
+            <label for="cedula">Cédula del Estudiante:</label>
+            <input type="text" id="cedula" placeholder="Ej. 102340567">
+        </div>
+
+        <div class="form-group">
+            <label for="nombre">Nombre Completo del Estudiante:</label>
+            <input type="text" id="nombre" placeholder="Ej. María Pérez Gómez">
+        </div>
+
+        <button class="btn" onclick="startQuiz()">Comenzar Quiz</button>
+    </div>
+
+    <!-- Pantalla del Quiz -->
+    <div id="quiz-screen" class="quiz-screen">
+        <div class="quiz-header">
+            <span id="question-counter">Pregunta 1 de 25</span>
+            <span id="timer-display">120s</span>
+        </div>
+        <div class="timer-bar-container">
+            <div id="timer-bar" class="timer-bar"></div>
+        </div>
+
+        <div id="question-container" class="question-text">Texto de la pregunta...</div>
+
+        <div class="options-grid">
+            <button class="option-btn opt-1" onclick="selectAnswer(0)"><span class="option-icon">▲</span><span id="opt-text-0">Opción 1</span></button>
+            <button class="option-btn opt-2" onclick="selectAnswer(1)"><span class="option-icon">◆</span><span id="opt-text-1">Opción 2</span></button>
+            <button class="option-btn opt-3" onclick="selectAnswer(2)"><span class="option-icon">●</span><span id="opt-text-2">Opción 3</span></button>
+            <button class="option-btn opt-4" onclick="selectAnswer(3)"><span class="option-icon">■</span><span id="opt-text-3">Opción 4</span></button>
+        </div>
+
+        <div id="feedback-box" class="feedback-box"></div>
+        <button id="next-btn" class="btn next-btn" onclick="nextQuestion()">Siguiente Pregunta</button>
+    </div>
+
+    <!-- Pantalla de Resultados -->
+    <div id="result-screen" class="result-screen">
+        <h2>¡Quiz Finalizado!</h2>
+        <div class="score-card">
+            <p><strong>Estudiante:</strong> <span id="res-nombre"></span></p>
+            <p><strong>Cédula:</strong> <span id="res-cedula"></span></p>
+            <p><strong>Puntaje Final:</strong> <span id="res-puntaje"></span> / 25</p>
+            <p><strong>Porcentaje:</strong> <span id="res-porcentaje"></span>%</p>
+        </div>
+        <p id="sync-status" class="sync-status">Guardando resultados en Google Sheets...</p>
+    </div>
+</div>
+
+<script>
+    const SCRIPT_URL = "PEGA_AQUI_TU_URL_DE_APPS_SCRIPT_TERMINADA_EN_EXEC";
+
+    const questions = [
+        {
+            q: "¿Quién es considerado por la mayoría de los expertos como el inventor de la máquina de escribir en el año 1808?",
+            options: ["Christopher Latham Sholes", "Pellegrino Turri", "John von Neumann", "Linus Torvalds"],
+            correct: 1,
+            explanation: "Pellegrino Turri, un mecánico italiano, es considerado el primer desarrollador e inventor documentado de la máquina de escribir en 1808."
+        },
+        {
+            q: "¿Cuál fue la primera computadora electrónica construida en 1947 en la Universidad de Pennsylvania?",
+            options: ["UNIVAC", "ENIAC", "IBM 701", "Apple II"],
+            correct: 1,
+            explanation: "La ENIAC (Electronic Numerical Integrator And Calculator) fue construida en 1947 por John Mauchly y John Eckert."
+        },
+        {
+            q: "¿Cuál fue la idea fundamental aportada por el matemático John von Neumann que revolucionó el diseño de las computadoras?",
+            options: ["Permitir que en la memoria coexistan datos con instrucciones", "Utilizar tubos de vacío de gran tamaño", "Eliminar por completo el uso de la memoria RAM", "Crear las primeras redes inalámbricas Wi-Fi"],
+            correct: 0,
+            explanation: "La idea fundamental de von Neumann fue permitir que en la memoria coexistan datos con instrucciones para programar en un lenguaje."
+        },
+        {
+            q: "¿Qué componente tecnológico caracterizó a las computadoras de la Segunda Generación (década de 1960)?",
+            options: ["Tubos de vacío", "Circuitos integrados", "Circuitos de transistores", "Microprocesadores de alta densidad"],
+            correct: 2,
+            explanation: "Las computadoras de la segunda generación estaban construidas con circuitos de transistores y se programaban en lenguajes de alto nivel."
+        },
+        {
+            q: "¿Qué innovación introdujo la Tercera Generación de computadoras a partir del año 1964?",
+            options: ["El microprocesador", "El circuito integrado", "Las redes neuronales artificiales", "Las tarjetas perforadas"],
+            correct: 1,
+            explanation: "La tercera generación comenzó en 1964 con la introducción del circuito integrado para aunar diferentes elementos de las máquinas."
+        },
+        {
+            q: "¿Qué elemento fundamental aparece en la Cuarta Generación de computadoras, permitiendo la creación de microcomputadoras y computadoras personales?",
+            options: ["El microprocesador", "El tubo de vacío", "El transistor", "La cinta magnética"],
+            correct: 0,
+            explanation: "Los microprocesadores son circuitos integrados de alta densidad que dieron origen a las microcomputadoras y equipos personales."
+        },
+        {
+            q: "¿Qué característica principal define a la Sexta Generación de computadoras?",
+            options: ["Uso exclusivo de tarjetas perforadas", "Computadoras inteligentes basadas en redes neuronales artificiales o cerebros artificiales", "Invención de la máquina ENIAC", "Creación de los primeros transistores de germanio"],
+            correct: 1,
+            explanation: "La sexta generación se desarrolló en torno a computadoras inteligentes basadas en redes neuronales artificiales y superconductores."
+        },
+        {
+            q: "¿Cuál es la función principal de la memoria RAM en una computadora?",
+            options: ["Almacenar archivos digitales de manera permanente y no volátil", "Servir como memoria de trabajo para el sistema operativo y programas activos", "Procesar y ejecutar todas las instrucciones aritméticas", "Facilitar la conexión inalámbrica Wi-Fi y Bluetooth"],
+            correct: 1,
+            explanation: "La memoria RAM se utiliza como memoria de trabajo volátil donde se cargan las instrucciones ejecutadas por el procesador."
+        },
+        {
+            q: "Indique un ejemplo de dispositivo periférico de entrada según la clasificación de hardware:",
+            options: ["Monitor", "Impresora", "Escáner", "Proyector de vídeo"],
+            correct: 2,
+            explanation: "Los periféricos de entrada permiten introducir datos, siendo ejemplos el teclado, ratón, escáner y micrófono."
+        },
+        {
+            q: "¿Qué tipo de software es un Sistema Operativo según la clasificación del soporte lógico?",
+            options: ["Software de aplicación", "Software de sistema o base", "Software comercial de oficina", "Procesador de textos"],
+            correct: 1,
+            explanation: "El software de sistema (o de base) sirve de soporte para controlar e interactuar con el hardware y otros programas."
+        },
+        {
+            q: "¿Quién desarrolló inicialmente el núcleo (kernel) del sistema operativo Linux en 1991?",
+            options: ["Bill Gates", "Linus Torvalds", "Steve Wozniak", "Gary Kildall"],
+            correct: 1,
+            explanation: "Linux está basado en Unix y su kernel fue desarrollado inicialmente por Linus Torvalds en 1991."
+        },
+        {
+            q: "¿Cuál de los siguientes componentes del escritorio de Windows incluye el reloj y avisos del sistema (como la conexión de una llave maya)?",
+            options: ["Barra de tareas", "Barra de inicio rápido", "Área de notificaciones", "Botón Inicio"],
+            correct: 2,
+            explanation: "El área de notificación situada en el extremo derecho de la barra de tareas incluye el reloj y iconos de estado o avisos."
+        },
+        {
+            q: "¿Qué combinación de teclas rápida se utiliza comúnmente en Windows para cortar un bloque de texto seleccionado?",
+            options: ["Ctrl + C", "Ctrl + V", "Ctrl + X", "Ctrl + E"],
+            correct: 2,
+            explanation: "Ctrl + X se utiliza para cortar, debido a la forma en tijera de dicha letra."
+        },
+        {
+            q: "¿Cuál de los siguientes consejos es fundamental al aprender mecanografía y digitación computacional?",
+            options: ["Mirar constantemente el teclado para no equivocarse", "No cometer errores y rectificar si te equivocas, sin importar la velocidad inicial", "Escribir siempre con una sola mano", "Suspender los brazos en el aire sin apoyarlos"],
+            correct: 1,
+            explanation: "Uno de los tres consejos esenciales es no cometer errores y rectificar; ir despacio al principio priorizando la precisión."
+        },
+        {
+            q: "Según la postura correcta frente al computador, ¿cuál debe ser la distancia ideal entre los ojos del usuario y el monitor?",
+            options: ["Menor a 20 centímetros", "Una distancia superior a los 40 cm (idealmente 40-75 cm)", "Exactamente 10 centímetros", "No importa la distancia mientras se apague el monitor"],
+            correct: 1,
+            explanation: "La distancia ideal entre el usuario y el monitor no debe ser menor de 40 centímetros para prevenir la fatiga visual y miopía."
+        },
+        {
+            q: "¿Cómo se llaman las teclas de la fila guía que poseen una marca táctil para ubicar los dedos en la posición inicial?",
+            options: ["Q y P", "F y J", "A y Z", "Enter y Backspace"],
+            correct: 1,
+            explanation: "La fila guía contiene las teclas F y J con una marca táctil para ubicar los dedos índices en la posición inicial."
+        },
+        {
+            q: "¿Por qué se le denomina distribución de teclado 'QWERTY'?",
+            options: ["Porque fue inventado en la ciudad de Qwerty en Estados Unidos", "Debido a que son las primeras seis letras de su fila superior de teclas", "Porque utiliza códigos binarios avanzados", "Porque sus teclas están ordenadas estrictamente en orden alfabético"],
+            correct: 1,
+            explanation: "Lleva ese nombre porque Q-W-E-R-T-Y son las primeras seis letras de su fila superior de teclas."
+        },
+        {
+            q: "¿Qué función cumple la tecla de retroceso (Backspace) en el teclado?",
+            options: ["Eliminar caracteres a partir de donde está colocado el cursor hacia adelante", "Regresar el cursor borrando el carácter que encuentra a su paso", "Desplazar la página completa hacia abajo", "Abrir el menú de ayuda del programa activo"],
+            correct: 1,
+            explanation: "La tecla Retroceso (Backspace) permite regresar el cursor borrando el carácter que encuentra a su paso."
+        },
+        {
+            q: "¿Qué concepto define a los procesadores de texto actuales en los que el aspecto final del documento impreso o guardado es exactamente igual a lo que el usuario ve en pantalla mientras edita?",
+            options: ["WYSIWYG", "CPU", "QWERTY", "URL"],
+            correct: 0,
+            explanation: "WYSIWYG significa 'What You See Is What You Get' (lo que ves es lo que obtienes)."
+        },
+        {
+            q: "¿Qué combinación de teclas permite seleccionar todo el texto de un documento en un procesador de textos?",
+            options: ["Ctrl + C", "Ctrl + G", "Ctrl + E", "Ctrl + P"],
+            correct: 2,
+            explanation: "Para seleccionar todo el texto se pulsa la combinación Ctrl + E con el teclado."
+        },
+        {
+            q: "¿Qué indica una línea ondulada de color rojo debajo de una palabra al redactar un documento en Microsoft Word?",
+            options: ["Un error de coherencia gramatical en la oración", "Una palabra incorrecta o no contenida en el diccionario interno", "Un hiperactivo enlace web desactualizado", "Un formato de fuente avanzado"],
+            correct: 1,
+            explanation: "La herramienta Ortografía indica con una línea ondulada roja una palabra incorrecta o no contenida en el diccionario."
+        },
+        {
+            q: "¿Cuál es la medida por defecto de los márgenes en un documento nuevo de Microsoft Word?",
+            options: ["1 cm superior e inferior / 1 cm izquierdo y derecho", "2,5 cm en los bordes superior e inferior y 3 cm en los bordes derecho e izquierdo", "5 cm en todos los bordes", "No tienen márgenes predeterminados"],
+            correct: 1,
+            explanation: "Por defecto, los márgenes miden 2,5 cm en los bordes superior e inferior y 3 cm en los bordes derecho e izquierdo (modo Normal)."
+        },
+        {
+            q: "¿Cómo se denominan los rectángulos que se forman en la intersección de las filas y columnas dentro de una tabla de Word?",
+            options: ["Márgenes", "Celdas", "Párrafos", "Sangrías"],
+            correct: 1,
+            explanation: "Las celdas son los rectángulos que se forman cuando se cruzan las filas y las columnas en una tabla."
+        },
+        {
+            q: "¿Cuál es la función del Encabezado en un documento de Word?",
+            options: ["Insertar texto o imagen en el área superior de todas las páginas para identificar el documento", "Mostrar la barra de tareas de Windows", "Cambiar el color de fondo de las tablas", "Alinear verticalmente los párrafos"],
+            correct: 0,
+            explanation: "El encabezado es el área de la parte superior de todas las páginas para insertar texto o imagen identificativa."
+        },
+        {
+            q: "¿Qué software de mecanografía en línea y tutor cuenta con 100 lecciones clasificadas por alfabeto, shift, números y símbolos, además de estadísticas de tipeo?",
+            options: ["Mecanet", "AgileFingers", "Typing Club", "ENIAC"],
+            correct: 2,
+            explanation: "Typing Club es un completo tutor que enseña la forma correcta de escribir con 100 lecciones y estadísticas."
+        }
+    ];
+
+    let currentQuestion = 0;
+    let score = 0;
+    let timer;
+    let timeLeft = 120;
+    let studentCedula = "";
+    let studentNombre = "";
+
+    function startQuiz() {
+        studentCedula = document.getElementById('cedula').value.trim();
+        studentNombre = document.getElementById('nombre').value.trim();
+
+        if (studentCedula === "" || studentNombre === "") {
+            alert("Por favor, ingrese su cédula y nombre completo para continuar.");
+            return;
+        }
+
+        document.getElementById('welcome-screen').style.display = 'none';
+        document.getElementById('quiz-screen').style.display = 'block';
+        loadQuestion();
+    }
+
+    function loadQuestion() {
+        clearInterval(timer);
+        timeLeft = 120;
+        document.getElementById('timer-display').textContent = timeLeft + 's';
+        document.getElementById('timer-bar').style.width = '100%';
+        document.getElementById('timer-bar').style.backgroundColor = 'var(--green)';
+
+        const q = questions[currentQuestion];
+        document.getElementById('question-counter').textContent = `Pregunta ${currentQuestion + 1} de ${questions.length}`;
+        document.getElementById('question-container').textContent = q.q;
+
+        for (let i = 0; i < 4; i++) {
+            document.getElementById(`opt-text-${i}`).textContent = q.options[i];
+            const btn = document.querySelector(`.opt-${i+1}`);
+            btn.disabled = false;
+        }
+
+        document.getElementById('feedback-box').style.display = 'none';
+        document.getElementById('next-btn').style.display = 'none';
+
+        startTimer();
+    }
+
+    function startTimer() {
+        const timerBar = document.getElementById('timer-bar');
+        timer = setInterval(() => {
+            timeLeft--;
+            document.getElementById('timer-display').textContent = timeLeft + 's';
+            const percentage = (timeLeft / 120) * 100;
+            timerBar.style.width = percentage + '%';
+
+            if (timeLeft <= 30) {
+                timerBar.style.backgroundColor = 'var(--red)';
+            }
+
+            if (timeLeft <= 0) {
+                clearInterval(timer);
+                lockAnswers(-1);
+            }
+        }, 1000);
+    }
+
+    function selectAnswer(selectedIndex) {
+        clearInterval(timer);
+        lockAnswers(selectedIndex);
+    }
+
+    function lockAnswers(selectedIndex) {
+        const q = questions[currentQuestion];
+        const feedbackBox = document.getElementById('feedback-box');
+        
+        for (let i = 0; i < 4; i++) {
+            document.querySelector(`.opt-${i+1}`).disabled = true;
+        }
+
+        if (selectedIndex === q.correct) {
+            score++;
+            feedbackBox.className = 'feedback-box feedback-correct';
+            feedbackBox.innerHTML = `<strong>¡Correcto!</strong> ${q.explanation}`;
+        } else {
+            feedbackBox.className = 'feedback-box feedback-incorrect';
+            feedbackBox.innerHTML = `<strong>Incorrecto.</strong> La respuesta correcta era: "${q.options[q.correct]}". ${q.explanation}`;
+        }
+
+        feedbackBox.style.display = 'block';
+        document.getElementById('next-btn').style.display = 'block';
+    }
+
+    function nextQuestion() {
+        currentQuestion++;
+        if (currentQuestion < questions.length) {
+            loadQuestion();
+        } else {
+            showResults();
+        }
+    }
+
+    function showResults() {
+        document.getElementById('quiz-screen').style.display = 'none';
+        document.getElementById('result-screen').style.display = 'block';
+
+        const finalPercentage = Math.round((score / questions.length) * 100);
+
+        document.getElementById('res-nombre').textContent = studentNombre;
+        document.getElementById('res-cedula').textContent = studentCedula;
+        document.getElementById('res-puntaje').textContent = score;
+        document.getElementById('res-porcentaje').textContent = finalPercentage;
+
+        sendDataToSheet(score, finalPercentage);
+    }
+
+    function sendDataToSheet(puntaje, porcentaje) {
+        const data = new URLSearchParams();
+        data.append('cedula', studentCedula);
+        data.append('nombre', studentNombre);
+        data.append('puntaje', puntaje);
+        data.append('porcentaje', porcentaje);
+
+        fetch(SCRIPT_URL, {
+            method: 'POST',
+            mode: 'no-cors',
+            body: data
+        })
+        .then(() => {
+            document.getElementById('sync-status').textContent = "¡Calificación registrada y guardada exitosamente en Google Sheets!";
+            document.getElementById('sync-status').style.color = "var(--green)";
+        })
+        .catch(error => {
+            console.error('Error al enviar los datos:', error);
+            document.getElementById('sync-status').textContent = "Error al conectar con Google Sheets. Verifique la URL SCRIPT_URL.";
+            document.getElementById('sync-status').style.color = "var(--red)";
+        });
+    }
+</script>
+
+</body>
+</html>
